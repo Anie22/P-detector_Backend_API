@@ -1,0 +1,7 @@
+boss/
+db.sqlite3
+__pycache__/
+.env
+migrations/
+.DS_Store
+node/
