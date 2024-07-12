@@ -91,7 +91,7 @@ class ResendVerificationCode(serializers.Serializer):
     verification_type = serializers.CharField(max_length=25, min_length=10)
 
     class Meta:
-        fields = ['email']
+        fields = ['email', 'verification_type']
 
     def validate(self, data):
         email = data.get('email')
