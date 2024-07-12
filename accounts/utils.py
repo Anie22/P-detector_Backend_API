@@ -21,7 +21,7 @@ def send_code_to_user(email):
     OneTimeCode.objects.create(user=user, code=otp)
 
     d_mail = EmailMessage(subject=Subject, body=email_body, from_email=from_email, to=[email])
-    d_mail.send(fail_silently=True)
+    d_mail.send()
 
 def generateRole():
     role = ''

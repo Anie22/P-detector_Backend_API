@@ -34,15 +34,18 @@ class UserSerializer(serializers.ModelSerializer):
         return attrs
 
     def create(self, validated_data):
-        user = User.objects.create_user(
-            firstName = validated_data.get('firstName'),
-            lastName = validated_data.get('lastName'),
-            userName = validated_data.get('userName'),
-            account_type = validated_data.get('account_type'),
-            email = validated_data['email'],
-            password = validated_data.get('password')
-        )
-        return user
+        try:
+            user = User.objects.create_user(
+                firstName = validated_data.get('firstName'),
+                lastName = validated_data.get('lastName'),
+                userName = validated_data.get('userName'),
+                account_type = validated_data.get('account_type'),
+                email = validated_data['email'],
+                password = validated_data.get('password')
+            )
+            return user
+        except Exception as e:
+            raise serializers.ValidationError(f'Unable to create an account {str(e)}')
 
 class VerifyUserSerializer(serializers.Serializer):
     email = serializers.EmailField(max_length=50)
@@ -90,9 +93,6 @@ class ResendVerificationCode(serializers.Serializer):
     email = serializers.EmailField(max_length=50, min_length=20)
     verification_type = serializers.CharField(max_length=25, min_length=10)
 
-    class Meta:
-        fields = ['email', 'verification_type']
-
     def validate(self, data):
         email = data.get('email')
         verification_type = data.get('verification_type')
@@ -100,32 +100,38 @@ class ResendVerificationCode(serializers.Serializer):
         if verification_type != 'Email Verification':
             raise serializers.ValidationError('Wrong authentication type')
 
-        try:
-            user_exists = User.objects.filter(email=email).exists()
+        user_exists = User.objects.filter(email=email).exists()
 
-            if user_exists:
-                user = User.objects.get(email=email)
-                otp_exists = OneTimeCode.objects.filter(user=user).exists()
-
-                if otp_exists:
-                    user_otp = OneTimeCode.objects.get(user=user)
-                    user_otp.delete()
-
-                otp = generateOtp()
-                new_otp = OneTimeCode(user=user, code=otp)
-                new_otp.save()
-
-                data = {
-                    'email_subject': 'Email Verification',
-                    'email_body': f'Good day {user.userName}, use this code {otp} to verify your account',
-                    'to_email': user.email
-                }
-                resend_code(data)
+        if not user_exists:
             raise serializers.ValidationError('User does not exist')
-        except Exception as e:
-            raise serializers.ValidationError(f'Unable to send mail: {str(e)}')
 
         return data
+
+    def save(self):
+        try:
+            email = self.validated_data.get('email')
+            user = User.objects.get(email=email)
+            otp_exists = OneTimeCode.objects.filter(user=user).exists()
+
+            if otp_exists:
+                user_otp = OneTimeCode.objects.get(user=user)
+                user_otp.delete()
+
+            otp = generateOtp()
+            new_otp = OneTimeCode(user=user, code=otp)
+            new_otp.save()
+
+            email_data = {
+                'email_subject': 'Email Verification',
+                'email_body': f'Good day {user.userName}, use this code {otp} to verify your account',
+                'to_email': user.email
+            }
+            resend_code(email_data)
+            return email_data
+        except Exception as e:
+            raise serializers.ValidationError(f'Unable to send mail {str(e)}')
+
+
 
 class LoginUserSerializer(serializers.ModelSerializer):
     email = serializers.EmailField(max_length=50, min_length=15)
@@ -142,10 +148,14 @@ class LoginUserSerializer(serializers.ModelSerializer):
         email = attrs.get('email')
         password = attrs.get('password')
         request = self.context.get('request')
-        user = authenticate(request, email=email, password=password)
 
+        user = User.objects.filter(email=email).first()
         if not user:
             raise AuthenticationFailed('User does not exist')
+
+        user = authenticate(request, email=email, password=password)
+        if not user:
+            raise AuthenticationFailed('wrong password')
         if not user.is_verified:
             raise AuthenticationFailed('User email is not verified')
         token=user.token()

@@ -68,11 +68,14 @@ class VerifyUserEmail(GenericAPIView):
 class ResendVerificationCode(GenericAPIView):
     # renderer_classes = [JSONRenderer, AccountAPI]
     serializer_class = ResendVerificationCode
+    def get_queryset(self):
+        return User.objects.none()
+
     def post(self, request):
         serializer = self.serializer_class(data=request.data)
         if serializer.is_valid():
-            serializer.save()
-            return Response({'message': 'Verification code sent'}, status=status.HTTP_200_OK)
+            email_data = serializer.save()
+            return Response({'message': f'Verification code sent to {email_data}'}, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 class Login(GenericAPIView):
