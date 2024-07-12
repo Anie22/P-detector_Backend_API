@@ -5,8 +5,8 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from django.utils import timezone
 
 class User(AbstractBaseUser, PermissionsMixin):
-    firstName = models.CharField(verbose_name='First Name', max_length=120, unique=True)
-    lastName = models.CharField(verbose_name='Last Name', max_length=120, unique=True)
+    firstName = models.CharField(verbose_name='First Name', max_length=120, unique=False)
+    lastName = models.CharField(verbose_name='Last Name', max_length=120, unique=False)
     userName = models.CharField(verbose_name='User Name', max_length=120, unique=True)
     email = models.EmailField(verbose_name='email', max_length=60, unique=True)
     account_type = models.CharField(verbose_name='Account Type', max_length=50, unique=False, null=True, blank=True)
