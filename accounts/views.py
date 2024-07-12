@@ -26,7 +26,7 @@ class AllUser(GenericAPIView):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 class CreateUser(GenericAPIView):
-    # renderer_classes = [JSONRenderer, AccountAPI]
+    renderer_classes = [JSONRenderer, AccountAPI]
     serializer_class = UserSerializer
 
     def post(self, request):
