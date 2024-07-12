@@ -91,7 +91,7 @@ class ResendVerificationCode(serializers.Serializer):
     verification_type = serializers.CharField(max_length=25, min_length=10)
 
     class Meta:
-        fields = ['email', 'verification_type']
+        fields = ['email']
 
     def validate(self, data):
         email = data.get('email')
@@ -121,10 +121,11 @@ class ResendVerificationCode(serializers.Serializer):
                     'to_email': user.email
                 }
                 resend_code(data)
-                return data
             raise serializers.ValidationError('User does not exist')
         except Exception as e:
             raise serializers.ValidationError(f'Unable to send mail: {str(e)}')
+
+        return data
 
 class LoginUserSerializer(serializers.ModelSerializer):
     email = serializers.EmailField(max_length=50, min_length=15)
