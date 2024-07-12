@@ -30,7 +30,7 @@ class UserSerializer(serializers.ModelSerializer):
         password2 = attrs.get('password2', '')
 
         if password != password2:
-            raise serializers.ValidationError('password does not match')
+            raise serializers.ValidationError('message':'password does not match')
         return attrs
 
     def create(self, validated_data):
@@ -61,15 +61,15 @@ class VerifyUserSerializer(serializers.Serializer):
         try:
             user = User.objects.get(email=email)
         except User.DoesNotExist:
-            raise serializers.ValidationError('User does not exist')
+            raise serializers.ValidationError('message':'User does not exist')
 
         try:
             otp = OneTimeCode.objects.get(user=user, code=code)
         except OneTimeCode.DoesNotExist:
-            raise serializers.ValidationError('Invalid code or already use')
+            raise serializers.ValidationError('message':'Invalid code or already use')
 
         if otp.is_expire():
-            raise serializers.ValidationError('Code has expire')
+            raise serializers.ValidationError('message':'Code has expire')
 
         return attrs
 
@@ -98,12 +98,12 @@ class ResendVerificationCode(serializers.Serializer):
         verification_type = data.get('verification_type')
 
         if verification_type != 'Email Verification':
-            raise serializers.ValidationError('Wrong authentication type')
+            raise serializers.ValidationError('message':'Wrong authentication type')
 
         user_exists = User.objects.filter(email=email).exists()
 
         if not user_exists:
-            raise serializers.ValidationError('User does not exist')
+            raise serializers.ValidationError('message':'User does not exist')
 
         return data
 
@@ -129,7 +129,7 @@ class ResendVerificationCode(serializers.Serializer):
             resend_code(email_data)
             return email_data
         except Exception as e:
-            raise serializers.ValidationError(f'Unable to send mail {str(e)}')
+            raise serializers.ValidationError('message':f'Unable to send mail {str(e)}')
 
 
 
@@ -151,13 +151,13 @@ class LoginUserSerializer(serializers.ModelSerializer):
 
         user = User.objects.filter(email=email).first()
         if not user:
-            raise AuthenticationFailed('User does not exist')
+            raise AuthenticationFailed('message':'User does not exist')
 
         user = authenticate(request, email=email, password=password)
         if not user:
-            raise AuthenticationFailed('wrong password')
+            raise AuthenticationFailed('message':'wrong password')
         if not user.is_verified:
-            raise AuthenticationFailed('User email is not verified')
+            raise AuthenticationFailed('message':'User email is not verified')
         token=user.token()
 
         return {
@@ -211,11 +211,11 @@ class UpdatePasswoedSerializer(serializers.Serializer):
             user_id = force_str(urlsafe_base64_decode(uidb64))
             user = User.objects.get(id=user_id)
             if not PasswordResetTokenGenerator().check_token(user, token):
-                raise AuthenticationFailed('reset link has expired or is invalid', 401)
+                raise AuthenticationFailed('message':'reset link has expired or is invalid', 401)
             if password != confirm_password:
-                raise AuthenticationFailed('password does not match')
+                raise AuthenticationFailed('message':'password does not match')
             user.set_password(password)
             user.save()
             return user
         except Exception as e:
-            raise AuthenticationFailed('reset link has expired or is invalid')
+            raise AuthenticationFailed('message':'reset link has expired or is invalid')
