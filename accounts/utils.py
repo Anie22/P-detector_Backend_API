@@ -12,10 +12,9 @@ def generateOtp():
 def send_code_to_user(email):
     Subject = 'Email Verification'
     otp = generateOtp()
-    user_name = User
     user = User.objects.get(email=email)
     current_site = 'P-Detector'
-    email_body = f'Good day {user_name.userName} thanks for signing up on {current_site} use this code {otp} to verify your account'
+    email_body = f'Good day {user.userName} thanks for signing up on {current_site} use this code {otp} to verify your account'
     from_email = settings.DEFAULT_FROM_EMAIL
 
     OneTimeCode.objects.create(user=user, code=otp)
