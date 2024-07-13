@@ -4,6 +4,7 @@ from rest_framework.response import Response
 from rest_framework.renderers import JSONRenderer
 from accounts.serializers import GetAllUserSerializer, UserSerializer, VerifyUserSerializer, LoginUserSerializer, ResetPasswordSerializer, UpdatePasswoedSerializer, ResendVerificationCode
 from rest_framework import status
+from django.db import IntegrityError
 from .models import User
 from .renders import AccountAPI
 from .utils import send_code_to_user, generateRole
@@ -26,34 +27,37 @@ class AllUser(GenericAPIView):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 class CreateUser(GenericAPIView):
-    renderer_classes = [JSONRenderer, AccountAPI]
+    # renderer_classes = [JSONRenderer, AccountAPI]
     serializer_class = UserSerializer
 
     def post(self, request):
         user_data = request.data
         serializer = self.serializer_class(data=user_data)
-        if serializer.is_valid(raise_exception=True):
-            user = serializer.save()
-            send_code_to_user(user.email)
+        try:
+            if serializer.is_valid(raise_exception=True):
+                user = serializer.save()
+                send_code_to_user(user.email)
 
-            if user.account_type == 'Lecturer' or user.account_type == 'lecturer':
-                L = 9
-                Lec = generateRole()
-                Lecturer = f'{L}{Lec}'
-                user.roles = Lecturer
-            elif user.account_type == 'Student' or user.account_type == 'student':
-                L = 7
-                Lec = generateRole()
-                Lecturer = f'{L}{Lec}'
-                user.roles = Lecturer
+                if user.account_type == 'Lecturer' or user.account_type == 'lecturer':
+                    L = 9
+                    Lec = generateRole()
+                    Lecturer = f'{L}{Lec}'
+                    user.roles = Lecturer
+                elif user.account_type == 'Student' or user.account_type == 'student':
+                    L = 7
+                    Lec = generateRole()
+                    Lecturer = f'{L}{Lec}'
+                    user.roles = Lecturer
 
-            user.save()
+                user.save()
 
-            return Response({
-                'data':serializer.data,
-                'message':f'hi thanks for signing up a passcodde have been sent to you mail to verify your account.'
-            }, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+                return Response({
+                    'data':serializer.data,
+                    'message':f'hi thanks for signing up a passcodde have been sent to you mail to verify your account.'
+                }, status=status.HTTP_201_CREATED)
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        except IntegrityError:
+            return Response({'message': 'A server error occurred'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 class VerifyUserEmail(GenericAPIView):
     # renderer_classes = [JSONRenderer, AccountAPI]

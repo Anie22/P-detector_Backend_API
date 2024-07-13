@@ -28,24 +28,30 @@ class UserSerializer(serializers.ModelSerializer):
     def validate(self, attrs):
         password = attrs.get('password', '')
         password2 = attrs.get('password2', '')
+        username = attrs.get('userName')
+        email = attrs.get('email')
 
         if password != password2:
             raise serializers.ValidationError('password does not match')
         return attrs
 
+        if User.objects.filter(username=username).exists():
+            raise serializers.ValidationError('This username is already taken')
+
+        if User.objects.filter(email=email).exists():
+            raise serializers.ValidationError('This email is already registered')
+
+
     def create(self, validated_data):
-        try:
-            user = User.objects.create_user(
-                firstName = validated_data.get('firstName'),
-                lastName = validated_data.get('lastName'),
-                userName = validated_data.get('userName'),
-                account_type = validated_data.get('account_type'),
-                email = validated_data['email'],
-                password = validated_data.get('password')
-            )
-            return user
-        except Exception as e:
-            raise serializers.ValidationError(f'Unable to create an account {str(e)}')
+        user = User.objects.create_user(
+            firstName = validated_data.get('firstName'),
+            lastName = validated_data.get('lastName'),
+            userName = validated_data.get('userName'),
+            email = validated_data['email'],
+            account_type = validated_data.get('account_type'),
+            password = validated_data.get('password')
+        )
+        return user
 
 class VerifyUserSerializer(serializers.Serializer):
     email = serializers.EmailField(max_length=50)
