@@ -28,13 +28,13 @@ class UserSerializer(serializers.ModelSerializer):
     def validate(self, attrs):
         password = attrs.get('password', '')
         password2 = attrs.get('password2', '')
-        username = attrs.get('userName', '')
+        userName = attrs.get('userName', '')
         email = attrs.get('email', '')
 
         if password != password2:
             raise serializers.ValidationError('password does not match')
 
-        if User.objects.filter(username=username).exists():
+        if User.objects.filter(userName=userName).exists():
             raise serializers.ValidationError('This username is already taken')
 
         if User.objects.filter(email=email).exists():
