@@ -33,13 +33,14 @@ class UserSerializer(serializers.ModelSerializer):
 
         if password != password2:
             raise serializers.ValidationError('password does not match')
-        return attrs
 
         if User.objects.filter(username=username).exists():
             raise serializers.ValidationError('This username is already taken')
 
         if User.objects.filter(email=email).exists():
             raise serializers.ValidationError('This email is already registered')
+            
+        return attrs
 
 
     def create(self, validated_data):
