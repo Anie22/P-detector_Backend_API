@@ -33,7 +33,7 @@ def send_normal_mail(data):
     email = EmailMessage(
         subject=data['email_subject'],
         body=data['email_body'],
-        from_email=settings.EMAIL_HOST_USER,
+        from_email=settings.DEFAULT_FROM_EMAIL,
         to=[data['to_email']]
     )
     email.send()
@@ -42,7 +42,7 @@ def resend_code(data):
     mail = EmailMessage(
         subject=data['email_subject'],
         body=data['email_body'],
-        from_email=settings.EMAIL_HOST_USER,
+        from_email=settings.DEFAULT_FROM_EMAIL,
         to=[data['to_email']]
     )
     mail.send()
