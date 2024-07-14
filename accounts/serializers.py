@@ -28,8 +28,8 @@ class UserSerializer(serializers.ModelSerializer):
     def validate(self, attrs):
         password = attrs.get('password', '')
         password2 = attrs.get('password2', '')
-        username = attrs.get('userName')
-        email = attrs.get('email')
+        username = attrs.get('userName', '')
+        email = attrs.get('email', '')
 
         if password != password2:
             raise serializers.ValidationError('password does not match')
