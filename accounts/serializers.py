@@ -42,8 +42,6 @@ class UserSerializer(serializers.ModelSerializer):
             
         return attrs
 
-        return attrs
-
 
     def create(self, validated_data):
         user = User.objects.create_user(
