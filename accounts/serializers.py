@@ -28,8 +28,8 @@ class UserSerializer(serializers.ModelSerializer):
     def validate(self, attrs):
         password = attrs.get('password', '')
         password2 = attrs.get('password2', '')
-        userName = attrs.get('userName')
-        email = attrs.get('email')
+        userName = attrs.get('userName', '')
+        email = attrs.get('email', '')
 
         if password != password2:
             raise serializers.ValidationError('password does not match')
@@ -39,6 +39,8 @@ class UserSerializer(serializers.ModelSerializer):
 
         if User.objects.filter(email=email).exists():
             raise serializers.ValidationError('This email is already registered')
+            
+        return attrs
 
         return attrs
 
