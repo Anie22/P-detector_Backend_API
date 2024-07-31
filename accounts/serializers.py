@@ -141,15 +141,16 @@ class ResendVerificationCode(serializers.Serializer):
 
 
 class LoginUserSerializer(serializers.ModelSerializer):
-    email = serializers.EmailField(max_length=50, min_length=15)
+    email = serializers.EmailField(max_length=50, min_length=5)
     password = serializers.CharField(max_length=40, write_only=True)
     userName = serializers.CharField(max_length=50, read_only=True)
     roles = serializers.CharField(max_length=4, read_only=True)
     access_token = serializers.CharField(max_length=300, read_only=True)
+    refresh_token = serializers.CharField(max_length=300, read_only=True)
 
     class Meta:
         model = User
-        fields = ['email', 'password', 'userName', 'roles', 'access_token']
+        fields = ['email', 'password', 'userName', 'roles', 'access_token', 'refresh_token']
 
     def validate(self, attrs):
         email = attrs.get('email')
@@ -171,7 +172,8 @@ class LoginUserSerializer(serializers.ModelSerializer):
             'email': user.email,
             'userName': user.userName,
             'roles': user.roles,
-            'access_token':str(token.get('access'))
+            'access_token':str(token.get('access')),
+            'refresh_token':str(token.get('refresh'))
         }
 
 class ResetPasswordSerializer(serializers.Serializer):
