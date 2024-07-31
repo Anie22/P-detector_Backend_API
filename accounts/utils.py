@@ -20,7 +20,7 @@ def send_code_to_user(email):
     OneTimeCode.objects.create(user=user, code=otp)
 
     d_mail = EmailMessage(subject=Subject, body=email_body, from_email=from_email, to=[email])
-    d_mail.send()
+    d_mail.send(fail_silently=True)
 
 def generateRole():
     role = ''
@@ -33,7 +33,7 @@ def send_normal_mail(data):
     email = EmailMessage(
         subject=data['email_subject'],
         body=data['email_body'],
-        from_email=settings.EMAIL_HOST_USER,
+        from_email = settings.DEFAULT_FROM_EMAIL,
         to=[data['to_email']]
     )
     email.send()
@@ -42,7 +42,7 @@ def resend_code(data):
     mail = EmailMessage(
         subject=data['email_subject'],
         body=data['email_body'],
-        from_email=settings.EMAIL_HOST_USER,
+        from_email = settings.DEFAULT_FROM_EMAIL,
         to=[data['to_email']]
     )
     mail.send()

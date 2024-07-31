@@ -2,11 +2,11 @@ from django.shortcuts import render
 from rest_framework.generics import GenericAPIView
 from rest_framework.response import Response
 from rest_framework.renderers import JSONRenderer
-from accounts.serializers import GetAllUserSerializer, UserSerializer, VerifyUserSerializer, LoginUserSerializer, ResetPasswordSerializer, UpdatePasswoedSerializer, ResendVerificationCode
 from rest_framework import status
+from accounts.serializers import *
 from django.db import IntegrityError
-from .models import User
-from .renders import AccountAPI
+from accounts.models import User
+from accounts.renders import AccountAPI
 from .utils import send_code_to_user, generateRole
 from django.utils.http import urlsafe_base64_encode
 from django.utils.encoding import smart_str, DjangoUnicodeDecodeError
@@ -25,6 +25,16 @@ class AllUser(GenericAPIView):
         users = self.get_queryset()
         serializer = self.get_serializer(users, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
+# class UserProfile(GenericAPIView):
+#     renderer_classes = [JSONRenderer, AccountAPI]
+
+#     queryset = User.objects.all()
+#     serializer_class = GetAllUserSerializer
+
+#     def get(self, request):
+#         queryset = User.objects.all(User = request.user)
+#         serializer = self.get_serializer(queryset, many=True)
+#         return Response(serializer.data, status=status.HTTP_200_OK)
 
 class CreateUser(GenericAPIView):
     renderer_classes = [JSONRenderer, AccountAPI]
@@ -52,7 +62,6 @@ class CreateUser(GenericAPIView):
                 user.save()
 
                 return Response({
-                    'data':serializer.data,
                     'message':f'hi thanks for signing up a passcodde have been sent to you mail to verify your account.'
                 }, status=status.HTTP_201_CREATED)
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -60,7 +69,7 @@ class CreateUser(GenericAPIView):
             return Response({'message': 'A server error occurred'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 class VerifyUserEmail(GenericAPIView):
-    # renderer_classes = [JSONRenderer, AccountAPI]
+    renderer_classes = [JSONRenderer, AccountAPI]
     serializer_class = VerifyUserSerializer
     def post(self, request):
         serializer = self.serializer_class(data=request.data)
@@ -92,10 +101,10 @@ class Login(GenericAPIView):
 
 
 class ResetPassword(GenericAPIView):
-    renderer_classes = [JSONRenderer, AccountAPI]
+    # renderer_classes = [JSONRenderer, AccountAPI]
     serializer_class = ResetPasswordSerializer
     def post(self, request):
-        serializer = self.serializer_class(data=request.data, context={'request':request})
+        serializer = self.serializer_class(data=request.data, context={'request': request})
         serializer.is_valid(raise_exception=True)
         return Response({'message':'Check your mail a link has been sent to you to help rest your password'}, status=status.HTTP_200_OK)
 
