@@ -1,5 +1,6 @@
 from django.contrib import admin
 from assignment.models import *
+from django.utils.html import format_html
 
 # Register your models here.
 
@@ -30,6 +31,9 @@ class SubmittedAdmin(admin.ModelAdmin):
     )
 
     ordering=('student',)
+
+    def Image(self, obj):
+        return format_html('<img src="{}" style="max-width:90px; max-height:90px"/>'.format(obj.image.url))
 
 admin.site.register(Assignment, AssignmentAdmin)
 admin.site.register(SubmittedAssignment, SubmittedAdmin)

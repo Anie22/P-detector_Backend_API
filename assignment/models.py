@@ -20,12 +20,12 @@ class Assignment(models.Model):
 
 class SubmittedAssignment(models.Model):
     project_name = models.CharField(verbose_name='Project Name', max_length=80)
-    project_solution = models.FileField(verbose_name='Project Solution', upload_to='media/project_files')
+    project_solution = models.FileField(verbose_name='Project Solution', upload_to='project_files')
     assignment = models.ForeignKey(Assignment, on_delete=models.CASCADE)
     grade = models.CharField(verbose_name='Grade', max_length=15, blank=True)
     status = models.CharField(verbose_name='Satus of Assignment', max_length=15, choices=STATUS_CHOICES, default='pending')
     submitted_on = models.DateTimeField(verbose_name='Submitted On', auto_now_add=True)
-    student = models.OneToOneField(User, on_delete=models.CASCADE)
+    student = models.ForeignKey(User, on_delete=models.CASCADE)
 
     def __str__(self):
-        return self.user.firstName
+        return self.student.firstName
