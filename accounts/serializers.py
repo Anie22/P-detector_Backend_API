@@ -224,6 +224,8 @@ class ResetPasswordSerializer(serializers.Serializer):
         except Exception as e:
             raise serializers.ValidationError(f'Unable to send mail {str(e)}')
 
+        return attrs
+
 class UpdatePasswoedSerializer(serializers.Serializer):
     password = serializers.CharField(max_length=30, min_length=8, write_only=True)
     confirm_password = serializers.CharField(max_length=30, min_length=8, write_only=True)
