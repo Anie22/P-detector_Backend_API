@@ -5,12 +5,14 @@ from rest_framework.renderers import JSONRenderer
 from rest_framework import status
 from accounts.serializers import *
 from django.db import IntegrityError
-from accounts.models import User
+from accounts.models import *
 from accounts.renders import AccountAPI
 from .utils import send_code_to_user, generateRole
 from django.utils.http import urlsafe_base64_encode
 from django.utils.encoding import smart_str, DjangoUnicodeDecodeError
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
+from rest_framework.permissions import IsAuthenticated
+from rest_framework_simplejwt.authentication import JWTAuthentication
 
 
 # Create your views here.
@@ -25,16 +27,20 @@ class AllUser(GenericAPIView):
         users = self.get_queryset()
         serializer = self.get_serializer(users, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
-# class UserProfile(GenericAPIView):
-#     renderer_classes = [JSONRenderer, AccountAPI]
 
-#     queryset = User.objects.all()
-#     serializer_class = GetAllUserSerializer
+class UserProfileView(GenericAPIView):
+    renderer_classes = [JSONRenderer, AccountAPI]
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [JWTAuthentication]
 
-#     def get(self, request):
-#         queryset = User.objects.all(User = request.user)
-#         serializer = self.get_serializer(queryset, many=True)
-#         return Response(serializer.data, status=status.HTTP_200_OK)
+    queryset = UserProfile.objects.all()
+    serializer_class = UserProfileSerializer
+
+    def get(self, request):
+        user = self.request.user
+        pro = UserProfile.objects.filter(user=user)
+        serializer = self.get_serializer(pro, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
 class CreateUser(GenericAPIView):
     renderer_classes = [JSONRenderer, AccountAPI]

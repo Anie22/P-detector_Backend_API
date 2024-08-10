@@ -11,8 +11,8 @@ class User(AbstractBaseUser, PermissionsMixin):
     email = models.EmailField(verbose_name='email', max_length=60, unique=True)
     account_type = models.CharField(verbose_name='Account Type', max_length=50, unique=False, null=True, blank=True)
     roles = models.CharField(verbose_name='role', max_length=4)
-    date_joined = models.DateField(verbose_name='Joined', auto_now_add=True)
-    last_login = models.DateField(verbose_name='Last login', auto_now_add=True)
+    date_joined = models.DateTimeField(verbose_name='Joined', auto_now_add=True)
+    last_login = models.DateTimeField(verbose_name='Last login', auto_now=True)
     is_lecturer = models.BooleanField(default=False)
     is_verified = models.BooleanField(default=False)
     is_admin = models.BooleanField(default=False)
@@ -51,4 +51,11 @@ class OneTimeCode(models.Model):
 
     def is_expire(self):
         return (timezone.now() - self.created_at).total_seconds() > 200
+
+class UserProfile(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    pic = models.ImageField(upload_to='photo', blank=True, null=True, default='user.png')
+
+    def __str__(self):
+        return f'{self.user.firstName} {self.user.lastName}'
 

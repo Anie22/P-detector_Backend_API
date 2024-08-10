@@ -1,6 +1,7 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
-from .models import User, OneTimeCode
+from accounts.models import *
+from django.utils.html import format_html
 
 
 class MyUserAdmin(BaseUserAdmin):
@@ -20,5 +21,20 @@ class MyUserAdmin(BaseUserAdmin):
 
     ordering=('firstName',)
 
+class ProfileAdmin(admin.ModelAdmin):
+    list_display = ('user', 'pic')
+    fieldsets = ()
+
+    add_fieldsets=(
+        (None, {
+            'classes':('wide'),
+            'fields':('user', 'pic')
+        }),
+    )
+
+    def Image(self, obj):
+        return format_html('<img src="{}" style="max-width:90px; max-height:90px"/>'.format(obj.image.url))
+
 admin.site.register(User, MyUserAdmin)
 admin.site.register(OneTimeCode)
+admin.site.register(UserProfile, ProfileAdmin)
