@@ -119,7 +119,7 @@ class PasswordResetConfirm(GenericAPIView):
     renderer_classes = [JSONRenderer, AccountAPI]
     def get(self, request, uidb64, token):
         try:
-            user_id = smart_str(urlsafe_base64_encode(uidb64))
+            user_id = urlsafe_base64_encode(uidb64)
             user = User.objects.get(id=user_id)
             if not PasswordResetTokenGenerator().check_token(user, token):
                 return Response({'mesage':'token is invalid or has expired'}, status=status.HTTP_401_UNAUTHORIZED)
