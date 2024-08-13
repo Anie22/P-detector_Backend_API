@@ -29,3 +29,13 @@ class SubmittedAssignment(models.Model):
 
     def __str__(self):
         return self.student.firstName
+
+class PlagiarismCheck(models.Model):
+    file1 = models.ForeignKey(SubmittedAssignment, on_delete=models.CASCADE, related_name='file1')
+    file2 = models.ForeignKey(SubmittedAssignment, on_delete=models.CASCADE, related_name='file2')
+    similarity_score = models.FloatField(verbose_name='Plagiarism Score', blank=True, null=True)
+    checked_on = models.DateTimeField(verbose_name='Checked on', auto_created=True, auto_now_add=True)
+    lecturer = models.ForeignKey(User, on_delete=models.CASCADE, default=True)
+
+    def __str__(self):
+        return f'Plagiarism check between {self.file1.project_solution} and {self.file2.project_solution}'
