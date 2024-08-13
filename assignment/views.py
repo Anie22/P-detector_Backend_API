@@ -3,16 +3,19 @@ from rest_framework.generics import GenericAPIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from rest_framework_simplejwt.authentication import JWTAuthentication
+from rest_framework.renderers import JSONRenderer
 from rest_framework import status
 from django.db import IntegrityError
 from assignment.models import *
 from assignment.serializers import *
+from assignment.renders import AssignmentAPI
 
 # Create your views here.
 
 class AssignmentView(GenericAPIView):
     permission_classes = [IsAuthenticated]
     authentication_classes = [JWTAuthentication]
+    renderer_classes = [AssignmentAPI, JSONRenderer]
     serializer_class = AssignmentSerializer
 
     def get_queryset(self):
@@ -35,6 +38,7 @@ class AssignmentView(GenericAPIView):
 class StudentAssignmentListView(GenericAPIView):
     permission_classes = [IsAuthenticated]
     authentication_classes = [JWTAuthentication]
+    renderer_classes = [AssignmentAPI, JSONRenderer]
     queryset = Assignment.objects.all()
     serializer_class = StudentAssignmentListSerializer
 
@@ -46,6 +50,7 @@ class StudentAssignmentListView(GenericAPIView):
 class LecturerAssignmentListView(GenericAPIView):
     permission_classes = [IsAuthenticated]
     authentication_classes = [JWTAuthentication]
+    renderer_classes = [AssignmentAPI, JSONRenderer]
     serializer_class = LecturerAssignmentListSerializer
 
     queryset = Assignment.objects.all()
@@ -56,7 +61,10 @@ class LecturerAssignmentListView(GenericAPIView):
         serializer = self.get_serializer(assign, many=True)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
-class UpdateAssignment(GenericAPIView):
+class UpdateAssignmentView(GenericAPIView):
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [JWTAuthentication]
+    renderer_classes = [AssignmentAPI, JSONRenderer]
     serializer_class = AssignmentSerializer
     queryset = Assignment.objects.all()
 
@@ -75,6 +83,7 @@ class UpdateAssignment(GenericAPIView):
 class SubmitAssignmentView(GenericAPIView):
     permission_classes = [IsAuthenticated]
     authentication_classes = [JWTAuthentication]
+    renderer_classes = [AssignmentAPI, JSONRenderer]
     serializer_class = SubmissionSerializer
 
     def get_queryset(self):
@@ -94,11 +103,12 @@ class SubmitAssignmentView(GenericAPIView):
         except IntegrityError as e:
             return Response({'message': f'A server error occurred {str(e)}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-class StudentSubmittedView(GenericAPIView):
+class StudentSubmissionView(GenericAPIView):
     permission_classes = [IsAuthenticated]
     authentication_classes = [JWTAuthentication]
-    serializer_class = StudentSubmittedListSerializer
+    renderer_classes = [AssignmentAPI, JSONRenderer]
     queryset = SubmittedAssignment.objects.all()
+    serializer_class = StudentSubmissionListSerializer
 
     def get(self, request):
         user = self.request.user
@@ -106,13 +116,27 @@ class StudentSubmittedView(GenericAPIView):
         serializer = self.get_serializer(submitted, many=True)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
-class LecturerSubmittedView(GenericAPIView):
+class LecturerStudentSubmissionView(GenericAPIView):
     permission_classes = [IsAuthenticated]
     authentication_classes = [JWTAuthentication]
-    serializer_class = LecturerSubmittedListSerializer
+    renderer_classes = [AssignmentAPI, JSONRenderer]
     queryset = SubmittedAssignment.objects.all()
+    serializer_class = LecturerStudentSubmissionListSerializer
 
     def get(self, request):
-        data = self.get_queryset()
-        serializer = self.get_serializer(data, many=True)
+        submission_data = self.get_queryset()
+        serializer = self.get_serializer(submission_data, many=True)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+class PlagiarismCheckerView(GenericAPIView):
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [JWTAuthentication]
+    renderer_classes = [AssignmentAPI, JSONRenderer]
+    queryset = PlagiarismCheck.objects.all()
+    serializer_class = PlagiarismCheckSerializer
+
+    def post(self, request):
+        serializer = self.get_serializer(data=request.data, context={'request':request})
+        if serializer.is_valid(raise_exception=True):
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)

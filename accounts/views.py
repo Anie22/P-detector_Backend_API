@@ -8,7 +8,7 @@ from django.db import IntegrityError
 from accounts.models import *
 from accounts.renders import AccountAPI
 from .utils import send_code_to_user, generateRole
-from django.utils.http import urlsafe_base64_encode
+from django.utils.http import urlsafe_base64_decode
 from django.utils.encoding import smart_str, DjangoUnicodeDecodeError
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
 from rest_framework.permissions import IsAuthenticated
@@ -107,7 +107,7 @@ class Login(GenericAPIView):
 
 
 class ResetPassword(GenericAPIView):
-    # renderer_classes = [JSONRenderer, AccountAPI]
+    renderer_classes = [JSONRenderer, AccountAPI]
     serializer_class = ResetPasswordSerializer
     def post(self, request):
         serializer = self.serializer_class(data=request.data, context={'request': request})
@@ -119,11 +119,13 @@ class PasswordResetConfirm(GenericAPIView):
     renderer_classes = [JSONRenderer, AccountAPI]
     def get(self, request, uidb64, token):
         try:
-            user_id = urlsafe_base64_encode(uidb64)
+
+            user_id = smart_str(urlsafe_base64_decode(uidb64))
+
             user = User.objects.get(id=user_id)
             if not PasswordResetTokenGenerator().check_token(user, token):
                 return Response({'mesage':'token is invalid or has expired'}, status=status.HTTP_401_UNAUTHORIZED)
-            return Response({'success':True, 'message':'user credentials is valid', 'uidb64':uidb64, 'token':token}, status=status.HTTP_200_OK)
+            return Response({'message':'user credentials is valid', 'uidb64':uidb64, 'token':token}, status=status.HTTP_200_OK)
         except DjangoUnicodeDecodeError:
             return Response({'mesage':'token is invalid or has expired'}, status=status.HTTP_401_UNAUTHORIZED)
 

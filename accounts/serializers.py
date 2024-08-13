@@ -154,10 +154,9 @@ class ResendVerificationCode(serializers.Serializer):
             }
             resend_code(email_data)
             return email_data
+
         except Exception as e:
-            raise serializers.ValidationError(f'Unable to send mail {str(e)}')
-
-
+            raise serializers.ValidationError(f'Unable to send mail {e}')
 
 class LoginUserSerializer(serializers.ModelSerializer):
     email = serializers.EmailField(max_length=50, min_length=5)
@@ -204,25 +203,29 @@ class ResetPasswordSerializer(serializers.Serializer):
     def validate(self, attrs):
         email = attrs.get('email')
         try:
-            if User.objects.filter(email=email).exists():
-                user = User.objects.get(email=email)
-                user_name = user.userName
-                id = urlsafe_base64_encode(smart_bytes(user.id))
-                token = PasswordResetTokenGenerator().make_token(user)
-                request = self.context.get('request')
-                site_domain = get_current_site(request).domain
-                relative_link = reverse('password-reset-confirm', kwargs={'uidb64':id, 'token':token})
-                abslink = f'https://{site_domain}{relative_link}'
-                email_body = f'Hi {user_name} use this link below to reset your password \n {abslink}'
-                data = {
-                    'email_body': email_body,
-                    'email_subject':'Reset your password',
-                    'to_email':user.email
-                }
-                send_normal_mail(data)
-            raise serializers.ValidationError('User not found')
+            if not User.objects.filter(email=email).exists():
+                raise serializers.ValidationError('User not found')
+
+            user = User.objects.get(email=email)
+            user_name = user.userName
+            uidb64 = urlsafe_base64_encode(smart_bytes(user.id))
+            token = PasswordResetTokenGenerator().make_token(user)
+            request = self.context.get('request')
+            site_domain = get_current_site(request).domain
+            relative_link = reverse('password-reset-confirm', kwargs={'uidb64':uidb64, 'token':token})
+            abslink = f'https://{site_domain}{relative_link}'
+            email_body = f'Hi {user_name} use this link below to reset your password \n {abslink}'
+            data = {
+                'email_body': email_body,
+                'email_subject':'Reset your password',
+                'to_email':user.email
+            }
+            send_normal_mail(data)
+
         except Exception as e:
-            raise serializers.ValidationError(f'Unable to send mail {str(e)}')
+            raise serializers.ValidationError(f'Unable to send mail {e}')
+
+        return attrs
 
         return attrs
 

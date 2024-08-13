@@ -3,12 +3,13 @@ from django.utils.translation import gettext_lazy as _
 from accounts.models import User
 from assignment.models import *
 from assignment.utils import send_assignment_notification
+from assignment.plagarism import check_plagiarism
 from django.utils import timezone
 
 class AssignmentSerializer(serializers.ModelSerializer):
     project_name = serializers.CharField(max_length=30, min_length=5)
     project_description = serializers.CharField(max_length=30, min_length=5)
-    submission_deadline = serializers.DateTimeField()
+    submission_deadline = serializers.DateTimeField(format='%Y-%M-%dT%H:%M:%S.%fZ')
     date_given = serializers.DateTimeField(read_only=True)
     lecturer = serializers.CharField(max_length=10, read_only=True)
 
@@ -17,13 +18,6 @@ class AssignmentSerializer(serializers.ModelSerializer):
         fields = ['project_name', 'project_description', 'submission_deadline', 'date_given', 'lecturer']
 
     def validate_submission_deadline(self, value):
-        if not isinstance(value, str):
-            raise serializers.ValidationError('Submission deadline must be a string in ISO 8601 format')
-
-        try:
-            value = timezone.datetime.fromisoformat(value)
-        except ValueError as e:
-            raise serializers.ValidationError(f'Submission deadline must be in ISO 8601 format, {str(e)}')
 
         if value <= timezone.now():
             raise serializers.ValidationError('Submission date must be a future date')
@@ -72,6 +66,8 @@ class AssignmentSerializer(serializers.ModelSerializer):
         instance.lecturer = lecturer
 
         instance.save()
+
+        return instance
 
 
 class StudentAssignmentListSerializer(serializers.ModelSerializer):
@@ -131,7 +127,7 @@ class SubmissionSerializer(serializers.ModelSerializer):
         else:
             raise serializers.ValidationError('Student not found')
 
-class StudentSubmittedListSerializer(serializers.ModelSerializer):
+class StudentSubmissionListSerializer(serializers.ModelSerializer):
     project_name = serializers.CharField(max_length=80, read_only=True)
     project_solution = serializers.FileField(read_only=True)
     assignment = serializers.CharField(max_length=10, read_only=True)
@@ -143,7 +139,7 @@ class StudentSubmittedListSerializer(serializers.ModelSerializer):
         model = SubmittedAssignment
         fields = ['id', 'project_name', 'project_solution', 'assignment', 'grade', 'status', 'submitted_on']
 
-class LecturerSubmittedListSerializer(serializers.ModelSerializer):
+class LecturerStudentSubmissionListSerializer(serializers.ModelSerializer):
     project_name = serializers.CharField(max_length=80, read_only=True)
     project_solution = serializers.FileField(read_only=True)
     assignment = serializers.CharField(max_length=10, read_only=True)
@@ -155,3 +151,68 @@ class LecturerSubmittedListSerializer(serializers.ModelSerializer):
     class Meta:
         model = SubmittedAssignment
         fields = ['id', 'project_name', 'project_solution', 'assignment', 'grade', 'status', 'submitted_on', 'student']
+
+class PlagiarismCheckSerializer(serializers.ModelSerializer):
+    file1 = serializers.CharField(write_only=True)
+    file2 = serializers.CharField(write_only=True)
+    similarity_score = serializers.FloatField(read_only=True)
+    checked_on = serializers.DateTimeField(read_only=True)
+    lecturer = serializers.CharField(read_only=True)
+
+    class Meta:
+        model = PlagiarismCheck
+        fields = ['file1', 'file2', 'similarity_score', 'checked_on', 'lecturer']
+
+    def validate(self, data):
+        file1 = SubmittedAssignment.objects.get(id=data['file1'])
+        file2 = SubmittedAssignment.objects.get(id=data['file2'])
+
+        if file1.id == file2.id:
+            raise serializers.ValidationError('Comparison of the same file is prihobited')
+
+        file1_data = PlagiarismCheck.objects.filter(file1=file1).exists()
+        file2_data = PlagiarismCheck.objects.filter(file2=file2).exists()
+
+        if file1_data and file2_data:
+            raise serializers.ValidationError('Files have already been compared and graded and cannot be use twise')
+
+    def create(self, validated_data):
+        file1 = SubmittedAssignment.objects.get(id=validated_data['file1'])
+        file2 = SubmittedAssignment.objects.get(id=validated_data['file2'])
+        request = self.context.get('request')
+        lecturer = request.user if request else None
+
+        similarity_score = check_plagiarism(file1.project_solution.path, file2.project_solution.path)
+
+        file1.grade = self.calculate_grade(similarity_score)
+        file2.grade = self.calculate_grade(similarity_score)
+
+        file1.save()
+        file2.save()
+
+        plagiarism_check = PlagiarismCheck.objects.create(
+            file1=file1,
+            file2=file2,
+            similarity_score=similarity_score,
+            checked_on=validated_data.get('checked_on'),
+            lecturer=lecturer
+        )
+
+        return plagiarism_check
+
+    def calculate_grade(self, similarity_score):
+
+        if similarity_score >= 0 and similarity_score <= 30:
+            grade = 'A'
+        elif similarity_score >= 30 and similarity_score <= 50:
+            grade = 'B'
+        elif similarity_score >= 50 and similarity_score <= 59:
+            grade = 'C'
+        elif similarity_score >= 59 and similarity_score <= 75:
+            grade = 'D'
+        elif similarity_score >= 75 and similarity_score <= 85:
+            grade = 'E'
+        elif similarity_score >= 85 and similarity_score == 100:
+            grade = 'F'
+
+        return grade

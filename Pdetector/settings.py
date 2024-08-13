@@ -13,14 +13,12 @@ https://docs.djangoproject.com/en/5.0/ref/settings/
 import environ
 from pathlib import Path
 import os
+import nltk
 from datetime import timedelta
 
 env = environ.Env(
     DEBUG = (bool, False)
 )
-
-# ENVIRONMENT = env('ENVIRONMENT', default='production')
-# ENVIRONMENT = 'production'
 
 ENVIRONMENT = env('ENVIRONMENT', default='production')
 ENVIRONMENT = 'production'
@@ -104,14 +102,13 @@ AUTH_USER_MODEL = 'accounts.User'
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework_simplejwt.authentication.JWTAuthentication',
-        'rest_framework.authentication.TokenAuthentication',
     ],
-
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.IsAuthenticated',
-    ]
-
+    ],
 }
+
+DATETIME_INPUT_FORMATS = ['%Y-%m-%dT%H:%M:%S.%fZ']
 
 SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(hours=2),
@@ -180,6 +177,11 @@ STATICFILES_STORAGE = "whitenoise.storage.CompressedStaticFilesStorage"
 MEDIA_ROOT = os.path.join(BASE_DIR,'media')
 MEDIA_URL = '/media/'
 
+nltk.data.path.append(os.path.join(BASE_DIR, 'nltk_data'))
+
+# Download 'punkt' again if needed
+nltk.download('punkt', download_dir=os.path.join(BASE_DIR, 'nltk_data'), quiet=False)
+
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
 
@@ -189,8 +191,10 @@ REST_FRAMEWORK = {
     'DEFAULT_RENDERER_CLASSES': [
         'rest_framework.renderers.JSONRenderer',
         'rest_framework.renderers.BrowsableAPIRenderer',
-        'accounts.renders.AccountAPI'
+        'accounts.renders.AccountAPI',
+        'assignment.renders.AssignmentAPI'
     ],
+    'DATETIME_FORMAT': '%Y-%m-%dT%H:%M:%S.%fZ'
 }
 
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
