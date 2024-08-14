@@ -22,7 +22,7 @@ class MyUserAdmin(BaseUserAdmin):
     ordering=('firstName',)
 
 class ProfileAdmin(admin.ModelAdmin):
-    list_display = ('user', 'pic')
+    list_display = ('user', 'Pic')
     fieldsets = ()
 
     add_fieldsets=(
@@ -32,8 +32,8 @@ class ProfileAdmin(admin.ModelAdmin):
         }),
     )
 
-    def Image(self, obj):
-        return format_html('<img src="{}" style="max-width:90px; max-height:90px"/>'.format(obj.image.url))
+    def Pic(self, obj):
+        return format_html('<img src="{}" style="max-width:90px; max-height:90px"/>'.format(obj.pic.url))
 
 admin.site.register(User, MyUserAdmin)
 admin.site.register(OneTimeCode)

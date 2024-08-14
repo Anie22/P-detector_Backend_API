@@ -20,7 +20,7 @@ class AssignmentAdmin(admin.ModelAdmin):
     ordering=('lecturer',)
 
 class SubmittedAdmin(admin.ModelAdmin):
-    list_display = ['project_name', 'project_solution', 'assignment', 'grade', 'status', 'student']
+    list_display = ['project_name', 'Project_solution', 'assignment', 'grade', 'status', 'student']
     filter_horizontal = ()
     readonly_fields = ('submitted_on',)
     fieldsets = ()
@@ -34,8 +34,8 @@ class SubmittedAdmin(admin.ModelAdmin):
 
     ordering=('student',)
 
-    def Image(self, obj):
-        return format_html('<img src="{}" style="max-width:90px; max-height:90px"/>'.format(obj.image.url))
+    def Project_solution(self, obj):
+        return format_html('<img src="{}" style="max-width:90px; max-height:90px"/>'.format(obj.project_solution.url))
 
 class PlagiarismCheckAdmin(admin.ModelAdmin):
     list_display = ['file1', 'file2', 'similarity_score', 'checked_on', 'lecturer']
