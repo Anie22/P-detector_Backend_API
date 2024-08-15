@@ -119,7 +119,6 @@ class PasswordResetConfirm(GenericAPIView):
     renderer_classes = [JSONRenderer, AccountAPI]
     def get(self, request, uidb64, token):
         try:
-
             user_id = smart_str(urlsafe_base64_decode(uidb64))
 
             user = User.objects.get(id=user_id)
@@ -133,7 +132,7 @@ class PasswordResetConfirm(GenericAPIView):
 class UpdatePassword(GenericAPIView):
     renderer_classes = [JSONRenderer, AccountAPI]
     serializer_class = UpdatePasswoedSerializer
-    def patcht(self, request):
+    def patch(self, request):
         serializer = self.serializer_class(data=request.data)
         serializer.is_valid(raise_exception = True)
         return Response({'message':'password updated successfully'}, status=status.HTTP_200_OK)
