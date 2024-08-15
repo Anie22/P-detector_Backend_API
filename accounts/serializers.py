@@ -164,11 +164,10 @@ class LoginUserSerializer(serializers.ModelSerializer):
     userName = serializers.CharField(max_length=50, read_only=True)
     roles = serializers.CharField(max_length=4, read_only=True)
     access_token = serializers.CharField(max_length=300, read_only=True)
-    refresh_token = serializers.CharField(max_length=300, read_only=True)
 
     class Meta:
         model = User
-        fields = ['email', 'password', 'userName', 'roles', 'access_token', 'refresh_token']
+        fields = ['email', 'password', 'userName', 'roles', 'access_token']
 
     def validate(self, attrs):
         email = attrs.get('email')
@@ -190,8 +189,7 @@ class LoginUserSerializer(serializers.ModelSerializer):
             'email': user.email,
             'userName': user.userName,
             'roles': user.roles,
-            'access_token':str(token.get('access')),
-            'refresh_token':str(token.get('refresh'))
+            'access_token':str(token.get('access'))
         }
 
 class ResetPasswordSerializer(serializers.Serializer):
@@ -224,8 +222,6 @@ class ResetPasswordSerializer(serializers.Serializer):
 
         except Exception as e:
             raise serializers.ValidationError(f'Unable to send mail {e}')
-
-        return attrs
 
         return attrs
 
