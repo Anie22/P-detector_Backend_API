@@ -4,9 +4,9 @@ from nltk.corpus import stopwords
 from collections import Counter
 import math
 
-# nltk.download('punkt')
-# nltk.download('stopwords')
-# nltk.download('punkt_tab')
+nltk.download('punkt')
+nltk.download('stopwords')
+nltk.download('punkt_tab')
 
 def cosine_similarity(vec1, vec2):
     intersection = set(vec1.keys()) & set(vec2.keys())
